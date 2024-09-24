@@ -100,7 +100,8 @@ typedef struct Costos{
     float costoABB[4];
     float maxABB[4];
     int cant_Altas[3],cant_Bajas[3],cant_EvocarE[3],cant_EvocarF[3];
-}
+    float costos_medioABB[4];
+}costos;
 
 
 int main(){
@@ -175,6 +176,7 @@ void localizarABB(Arbol *arbol, int dni, int *exito) {
     arbol->padre = NULL;
 
     while (arbol->pos != NULL && arbol->pos->x.dni != dni) {
+        *costo = *costo + 1;
         arbol->padre = arbol->pos;
         if (dni < arbol->pos->x.dni) {
             arbol->pos = arbol->pos->hijoIzq;
@@ -184,6 +186,7 @@ void localizarABB(Arbol *arbol, int dni, int *exito) {
     }
 
     if (arbol->pos != NULL && arbol->pos->x.dni == dni) {
+        *costo = *costo + 1;
         *exito = 1; // éxito
     } else {
         *exito = 0; // fracaso
@@ -215,11 +218,15 @@ int altaABB(Arbol *arbol, Prestador pres, int *exito) {
         }
         if (arbol->raiz == NULL) {
             arbol->raiz = aux;
+            *costo = *costo + 0.5;
+
         } else {
             if (pres.dni > arbol->padre->x.dni) {
                 arbol->padre->hijoDer = aux;
+                *costo = *costo + 0.5;
             } else {
                 arbol->padre->hijoIzq = aux;
+                *costo = *costo + 0.5;
             }
         }
         *exito = 1; // éxito
@@ -256,15 +263,18 @@ int bajaABB(Arbol *arbol, Prestador aux, int *exito) {
         if (arbol->pos->hijoDer == NULL && arbol->pos->hijoIzq == NULL) {
             if (arbol->pos == arbol->raiz) {
                 arbol->raiz = NULL;
+                *costo = *costo + 0.5;
                 free(arbol->pos);
             } else {
                 // Eliminar el nodo hoja y ajustar el padre
                 if (arbol->padre->hijoDer == arbol->pos) {
                     free(arbol->pos);
                     arbol->padre->hijoDer = NULL;
+                    *costo = *costo + 0.5;
                 } else {
                     free(arbol->pos);
                     arbol->padre->hijoIzq = NULL;
+                    *costo = *costo + 0.5;
                 }
             }
 
@@ -274,10 +284,13 @@ int bajaABB(Arbol *arbol, Prestador aux, int *exito) {
                 // Si es la raíz con un solo hijo
                 if (arbol->pos->hijoIzq != NULL) {
                     arbol->raiz = arbol->raiz->hijoIzq;
+                    *costo = *costo + 0.5;
                 } else {
                     arbol->raiz = arbol->raiz->hijoDer;
+                    *costo = *costo + 0.5;
                 }
                 free(arbol->pos);
+                *costo = *costo + 0.5;
             } else {
                 // Ajustar el padre para reconectar al único hijo
                 if (arbol->pos->hijoDer != NULL) {
@@ -285,12 +298,15 @@ int bajaABB(Arbol *arbol, Prestador aux, int *exito) {
                         arbol->padre->hijoDer = arbol->pos->hijoDer;
                     } else {
                         arbol->padre->hijoIzq = arbol->pos->hijoDer;
+                        *costo = *costo + 0.5;
                     }
                 } else {
                     if (arbol->padre->x.dni < arbol->pos->x.dni) {
                         arbol->padre->hijoDer = arbol->pos->hijoIzq;
+                        *costo = *costo + 0.5;
                     } else {
                         arbol->padre->hijoIzq = arbol->pos->hijoIzq;
+                        *costo = *costo + 0.5;
                     }
                 }
                 free(arbol->pos);
@@ -310,6 +326,8 @@ int bajaABB(Arbol *arbol, Prestador aux, int *exito) {
             
             // Reemplazar los datos del nodo a eliminar por los del nodo encontrado
             arbol->pos->x = elem->x;
+            *costo = *costo + 1;
+
             
             // Ajustar conexiones para eliminar el nodo encontrado
             if (arbol->padre->hijoIzq == elem) {
@@ -317,6 +335,7 @@ int bajaABB(Arbol *arbol, Prestador aux, int *exito) {
             } else {
                 arbol->padre->hijoDer = elem->hijoIzq;
             }
+            *costo = *costo + 0.5;
             free(elem);
         }
         return 1;
