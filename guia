@@ -1,0 +1,894 @@
+/*
+    Prectico de Laboratorio n�2
+    Grupo 29
+    Integrantes: Bergelin Ariel y Alfonso German
+    Conclusion de mejor estructura: Debido a que al comparar las medias y maximas de todas las operaciones realizadas en
+    las estructuras el Arbol Binario de Busqueda es muy superior en terminos de eficiencia con respecto a ambas listas
+    tanto la de recorrido secuencual como la de busqueda binaria.
+
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+//-3 = localizacion fracaso
+//-1 = estructura vacia
+// 0 = elem encontrado
+// 1 = elem no encontrado
+// 2 = elem existente
+#define max 300
+typedef struct {
+    char codigoEnvio[7];
+    long dniReceptor;
+    char nomReceptor[100];
+    char domReceptor[200];
+    long dniEmisor;
+    char nomEmisor[100];
+    char fechaEnvio[20];
+    char fechaRecepcion[20];
+}Envio;
+typedef struct{
+    int costoLSO[4],costoLSOBB[4];
+    float costoABB[4];
+    int maxLSO[4], maxLSOBB[4];
+    float maxABB[4];
+    int cant_Altas[3],cant_Bajas[3],cant_EvocarE[3],cant_EvocarF[3];
+    float media_de_costosLSO[4],media_de_costosLSOBB[4],media_de_costosABB[4];
+}Costos;
+struct Nodo {
+    Envio env;
+    struct Nodo *hijoIzq;
+    struct Nodo *hijoDer;
+};
+struct Arbol{
+    struct Nodo *raiz;
+    struct Nodo *pos;
+    struct Nodo *padre;
+};
+
+int main(){
+
+    Costos costo;
+    struct Arbol arbol;
+    arbol.raiz = NULL;
+    arbol.pos=NULL;
+    arbol.padre=NULL;
+    Envio env_LSO[max],env_LSOBB[max];
+    int cant_LSO=0,cant_LSOBB=0,cant_ABB=0;
+    int opcion1 = 9;
+    int opcion2 = 8;
+    costo.costoLSO[3]=0;
+    costo.costoLSOBB[1]=0;
+    costo.costoABB[1]=0;
+    struct Nodo aux;
+    while (opcion1 != 0){
+        printf("\n Menu:\n");
+        printf("1. Cargar desde archivo \n");
+        printf("2. Mostrar estructura\n");
+        printf("3. Comparar estructura\n");
+        printf("0. Salir\n");
+        scanf(" %d", &opcion1);
+        printf("\n");
+        switch(opcion1){
+            case 1:{
+                cargarDesdeArchivo(env_LSO,env_LSOBB,&arbol,&cant_LSO,&cant_LSOBB,&costo);
+            }opcion1=9;
+            break;
+            case 2:{
+                while(opcion2!=0){
+                    printf("\nSeleccione la estructura a mostrar\n");
+                    printf("1. Lista secuencial rdenada con examinacion secuancial(LSO)\n");
+                    printf("2. Lista secuencial ordenada con busqueda binaria(LSOBB)\n");
+                    printf("3. Arbol de busqueda binaria(ABB)\n");
+                    printf("0. Volver al menu principal\n");
+                    scanf(" %d", &opcion2);
+                    printf("\n");
+                    opcion1=9;
+                    switch(opcion2){
+                        case 1:{
+                            mostrarEstructura_LSO(env_LSO,&cant_LSO);
+                            }
+                            break;
+                        case 2:{
+                            mostrarEstructura_LSO(env_LSOBB,&cant_LSOBB);
+                        }break;
+                        case 3:{
+                            mostrarEstructura_ABB(arbol);
+                        }break;
+                        default:{
+                            while(opcion2<0 || opcion2>3){
+                                printf("Opcion ingresada invalida, ingrese nuevamente: ");
+                                scanf(" %d", &opcion2);
+                            }
+                        }
+                    }
+
+                }
+                opcion2=9;
+            }opcion1=9;
+            break;
+            case 3:{
+            printf("A continuacion mostraremos los costos de las estructuas\n");
+
+            printf("\n--------LSO--------\n");
+
+            //---------COSTO---------
+            printf("costo de alta en LSO: %d\n",costo.costoLSO[0]);
+            printf("costo de baja en LSO: %d\n",costo.costoLSO[1]);
+            printf("costo de evocacion exitosa en LSO: %d\n",costo.costoLSO[2]);
+            printf("costo de evocacion fracasada en LSO: %d\n\n",costo.costoLSO[3]);
+            //---------MAXIMO---------
+            printf("costo maximo del alta LSO: %d\n",costo.maxLSO[0]);
+            printf("costo maximo de baja LSO: %d\n",costo.maxLSO[1]);
+            printf("costo maximo de evocacion exitosa LSO: %d\n",costo.maxLSO[2]);
+            printf("costo maximo de evocacion fallida LSO: %d\n\n",costo.maxLSO[3]);
+            //---------CANTIDAD---------
+            printf("cantidad de altas en LSO: %d\n",costo.cant_Altas[0]);
+            printf("cantidad de bajas en LSO: %d\n",costo.cant_Bajas[0]);
+            printf("cantidad de evocaciones exitosas en LSO: %d\n",costo.cant_EvocarE[0]);
+            printf("cantidad de evocaciones fracasadas en LSO: %d\n\n",costo.cant_EvocarF[0]);
+            //---------MEDIA---------
+            printf("media del alta en LSO: %.1f\n",costo.media_de_costosLSO[0]);
+            printf("media de bajas en LSO: %.1f\n",costo.media_de_costosLSO[1]);
+            printf("media de evocaciones exitosa en LSO: %.1f\n",costo.media_de_costosLSO[2]);
+            printf("media de evocaciones fallida en LSO: %.1f\n\n",costo.media_de_costosLSO[3]);
+
+
+            printf("\n--------LSOBB--------\n");
+            //---------COSTO---------
+            printf("costo de alta en LSOBB: %d\n",costo.costoLSOBB[0]);
+            printf("costo de baja en LSOBB: %d\n",costo.costoLSOBB[1]);
+            printf("costo de evocacion exitosa en LSOBB: %d\n",costo.costoLSOBB[2]);
+            printf("costo de evocacion fracasada en LSOBB: %d\n\n",costo.costoLSOBB[3]);
+            //---------MAXIMO---------
+            printf("costo maximo del alta LSOBB: %d\n",costo.maxLSOBB[0]);
+            printf("costo maximo de baja LSOBB: %d\n",costo.maxLSOBB[1]);
+            printf("costo maximo de evocacion exitosa LSOBB: %d\n",costo.maxLSOBB[2]);
+            printf("costo maximo de evocacion fallida LSOBB: %d\n\n",costo.maxLSOBB[3]);
+            //---------CANTIDAD---------
+            printf("cantidad de altas en LSOBB: %d\n",costo.cant_Altas[1]);
+            printf("cantidad de bajas en LSOBB: %d\n",costo.cant_Bajas[1]);
+            printf("cantidad de evocaciones exitosas en LSOBB: %d\n",costo.cant_EvocarE[1]);
+            printf("cantidad de evocaciones fracasadas en LSOBB: %d\n\n",costo.cant_EvocarF[1]);
+            //---------MEDIA---------
+            printf("media del alta en LSOBB: %.1f\n",costo.media_de_costosLSOBB[0]);
+            printf("media de bajas en LSOBB: %.1f\n",costo.media_de_costosLSOBB[1]);
+            printf("media de evocaciones exitosa en LSOBB: %.1f\n",costo.media_de_costosLSOBB[2]);
+            printf("media de evocaciones fallida en LSOBB: %.1f\n\n",costo.media_de_costosLSOBB[3]);
+
+           printf("\n--------ABB--------\n");
+            //---------COSTO---------
+            printf("costo de alta en ABB: %.1f\n",costo.costoABB[0]);
+            printf("costo de baja en ABB: %.1f\n",costo.costoABB[1]);
+            printf("costo de evocacion exitosa en ABB: %.1f\n",costo.costoABB[2]);
+            printf("costo de evocacion fracasada en ABB: %.1f\n\n",costo.costoABB[3]);
+            //---------MAXIMO---------
+            printf("costo maximo del alta ABB: %.1f\n",costo.maxABB[0]);
+            printf("costo maximo de baja ABB: %.1f\n",costo.maxABB[1]);
+            printf("costo maximo de evocacion exitosa ABB: %.1f\n",costo.maxABB[2]);
+            printf("costo maximo de evocacion fallida ABB: %.1f\n\n",costo.maxABB[3]);
+            //---------CANTIDAD---------
+            printf("cantidad de altas en ABB: %d\n",costo.cant_Altas[2]);
+            printf("cantidad de bajas en ABB: %d\n",costo.cant_Bajas[2]);
+            printf("cantidad de evocaciones exitosas en ABB: %d\n",costo.cant_EvocarE[2]);
+            printf("cantidad de evocaciones fracasadas en ABB: %d\n\n",costo.cant_EvocarF[2]);
+            //---------MEDIA---------
+            printf("media del alta en ABB: %.1f\n",costo.media_de_costosABB[0]);
+            printf("media de bajas en ABB: %.1f\n",costo.media_de_costosABB[1]);
+            printf("media de evocaciones exitosa en ABB: %.1f\n",costo.media_de_costosABB[2]);
+            printf("media de evocaciones fallida en ABB: %.1f\n\n",costo.media_de_costosABB[3]);
+
+
+            }opcion1=9;
+            break;
+            default:{
+                while(opcion1<0 || opcion1>3){
+                    printf("Opcion ingresada invalida, ingrese nuevamente: ");
+                    scanf(" %d", &opcion1);
+                }
+            }
+        }
+    }
+}
+
+struct Nodo* crearNodo(Envio env){
+    struct Nodo* nodo = (struct Nodo*)malloc(sizeof(struct Nodo));
+    nodo->env=env;
+    nodo->hijoDer=NULL;
+    nodo->hijoIzq=NULL;
+    return nodo;
+};
+
+int localizar_LSOBB(Envio env[], char cod[], int *exito, int *pos, int cant, int *costo){
+    int li,ls;
+    Envio testigo;
+    int vector[cant];
+    for(int i=0;i<=cant;i++){
+        vector[i]=0;}
+
+    if(cant==0){
+        return 2;    //Estructura vacia
+    }
+    li=-1;
+    ls=cant-1;
+    *pos=floor((li+ls+2)/2);
+    while(li+1<ls){
+        if(vector[*pos]==0){
+            vector[*pos]=1;
+            *costo = *costo + 1;
+
+        }
+        if(strcasecmp(cod,env[*pos].codigoEnvio)<0){
+            ls= *pos-1;
+        }else{
+            li=*pos-1;
+        }
+        *pos=floor((li+ls+2)/2);
+    }
+    if(vector[ls]==0){
+        vector[ls]=1;
+        *costo = *costo + 1;
+    }
+    if(strcasecmp(cod,env[*pos].codigoEnvio)==0){
+        return 0;    //Localizacion exitosa
+    }else{
+        if((strcasecmp(env[ls].codigoEnvio,cod))<0){
+            *pos=ls+1;
+        }else{
+            *pos=ls;
+        }
+        return 1;  //Localizacion fracasada
+    }
+}
+int localizar_LSO(Envio env[], char cod[], int *exito, int *pos, int cant, int *costo){
+    *pos=0;
+    while(*pos<cant && strcasecmp(cod,env[*pos].codigoEnvio)>0){
+        *costo=*costo +1;
+        *pos=*pos+1;
+    }
+    if(*pos<cant && strcasecmp(cod,env[*pos].codigoEnvio)==0){
+        *costo=*costo +1;
+        *exito=0;       //Localizacion exitosa
+    }else if(*pos<cant){
+        *costo=*costo +1;
+        *exito=1;       //Localizacion fracasada dentro de la estructura
+    }else{
+        *exito=2;       //Localizacion fracasada fuera de la estructura
+    }
+}
+int localizar_ABB(struct Arbol *arbol, char cod[], int *exito, float *costo){
+    if((*arbol).raiz==NULL){
+        return 2;    //Estructura vacia
+    }
+    (*arbol).pos=(*arbol).raiz;
+    (*arbol).padre=(*arbol).raiz;
+    while ((*arbol).pos != NULL && strcasecmp(cod,(*arbol).pos->env.codigoEnvio)!=0) {
+        *costo = *costo + 1;
+        if(strcasecmp(cod,(*arbol).pos->env.codigoEnvio)<0){
+            (*arbol).padre=(*arbol).pos;
+            (*arbol).pos=(*arbol).pos->hijoIzq;
+        }else{
+            (*arbol).padre=(*arbol).pos;
+            (*arbol).pos=(*arbol).pos->hijoDer;
+        }
+    }
+    if((*arbol).pos != NULL){
+            *costo = *costo + 1;
+        return 0;    //Localizacion exitosa
+    }else{
+        return 1;    //Localizacion fracasada
+    }
+}
+int evocar_LSOBB(Envio env[],Envio *aux,int cant,int *costo){
+    int pos,exito;
+    *costo=0;
+    if(cant==0){
+        return 2;       //Estructura vacia
+    }else{
+        localizar_LSOBB(env,(*aux).codigoEnvio,&exito,&pos,cant,&*costo);
+        if(exito==0){
+            *aux = env[pos];
+            return 0;   //Envio encontrado
+        }else{
+            return 1;   //Envio no encontrado
+        }
+    }
+}
+int evocar_LSO(Envio env[],Envio *aux,int cant, int *costo){
+    int pos,exito;
+    *costo = 0;
+    if(cant==0){
+        return 2;       //Estructura vacia
+    }else{
+        localizar_LSO(env,(*aux).codigoEnvio,&exito,&pos,cant,&*costo);
+        if(exito==0){
+            *aux = env[pos];
+            return 0;   //Envio encontrado
+        }else{
+            return 1;   //Envio no encontrado
+        }
+    }
+}
+int evocar_ABB(struct Arbol arbol,Envio *aux, int *costo){
+    int exito;
+    if(arbol.raiz==NULL){
+        return 2;       //Estructura vacia
+    }else{
+        *costo=0;
+        exito=localizar_ABB(&arbol,(*aux).codigoEnvio,&exito,&*costo);
+        if(exito==0){
+            *aux = arbol.pos->env;
+            return 0;   //Envio encontrado
+        }else{
+            return 1;   //Envio no encontrado
+        }
+    }
+}
+
+int alta_LSO(Envio env[],Envio aux,int *cant,int *costo){
+    int pos=0,exito,i;
+    if(*cant >= max){
+        exito=2;
+        return exito;}    //Sin espacio
+    localizar_LSO(env,aux.codigoEnvio,&exito,&pos,*cant,&*costo);
+    *costo = 0;
+    if(exito==0){
+        exito=1;        //Envio ya existente
+    }else{
+
+            for(i = *cant;pos<i;i--){
+                env[i] = env[i-1];
+                *costo= *costo + 1;
+            }
+            env[pos]=aux;
+            (*cant)++;
+            exito = 0;  //Envio cargado
+
+    }
+    return exito;
+}
+int alta_LSOBB(Envio env[],Envio aux,int *cant,int *costo){
+    int pos=0,exito,i;
+    if(*cant >= max){
+        exito=2;
+        return exito;}
+    exito=localizar_LSOBB(env,aux.codigoEnvio,&exito,&pos,*cant,&*costo);
+    *costo = 0;
+    if(exito==0){
+        exito=1;        //Envio ya existente
+    }else{
+            for(i = *cant;pos<i;i--){
+                env[i] = env[i-1];
+                *costo= *costo +1;
+            }
+            env[pos]=aux;
+            *cant=*cant+1;
+            exito = 0;  //Envio cargado
+
+    }
+    return exito;
+}
+int alta_ABB(struct Arbol *arbol,Envio aux,struct Nodo *padre,float *costo){
+    int exito;
+    float x;
+    struct Nodo *pos;
+    exito=localizar_ABB(arbol,aux.codigoEnvio,&exito,&*costo);
+    *costo=0;
+    if(exito==0){
+        return 1;   //Envio ya existente
+    }else{
+        if((*arbol).raiz==NULL){
+            if (crearNodo(aux) == NULL){
+                printf("no hay memoria para crear otro nodo");
+                return 1;
+            }
+            (*arbol).raiz=crearNodo(aux);
+            *costo = *costo + 0.5;
+        }else{
+            if(strcasecmp(aux.codigoEnvio,(*arbol).padre->env.codigoEnvio)>0){
+                (*arbol).padre->hijoDer=crearNodo(aux);
+                *costo = *costo + 0.5;
+            }else{
+                (*arbol).padre->hijoIzq=crearNodo(aux);
+                *costo = *costo + 0.5;
+
+        }
+        return 0;   //Envio cargado
+    }
+
+}
+}
+
+int baja_LSO(Envio env[],Envio aux ,int *cant,int *costo){
+    int pos,exito;
+    int cont=0;
+    localizar_LSO(env,aux.codigoEnvio,&exito,&pos,&cant,&*costo);
+    *costo = 0;
+    if(exito==0){
+        if(strcasecmp(env[pos].codigoEnvio,aux.codigoEnvio)==0){
+           cont++;
+        }
+        if(env[pos].dniEmisor == aux.dniEmisor){
+           cont++;
+        }
+        if(env[pos].dniReceptor == aux.dniReceptor){
+           cont++;
+        }
+        if(strcasecmp(env[pos].domReceptor,aux.domReceptor)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].fechaEnvio,aux.fechaEnvio)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].fechaRecepcion,aux.fechaRecepcion)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].nomEmisor,aux.nomEmisor)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].nomReceptor,aux.nomReceptor)==0){
+           cont++;
+        }
+        if(cont==8){
+            while(pos<*cant-1){
+                env[pos]=env[pos+1];
+                pos++;
+                *costo = *costo + 1;
+            }
+            *cant = *cant -1;
+             return exito=0;    //se elimino
+        }else{
+            return exito=1;    //no se  elimino
+        }
+    }
+
+     return exito=2;           //Envio no encontrado
+}
+int baja_LSOBB(Envio env[],Envio aux ,int *cant,int *costo){
+    int pos,exito;
+    int cont=0;
+    exito=localizar_LSOBB(env,aux.codigoEnvio,&exito,&pos,*cant,&*costo);
+    *costo = 0;
+    if(exito==0){
+        if(strcasecmp(env[pos].codigoEnvio,aux.codigoEnvio)==0){
+           cont++;
+        }
+        if(env[pos].dniEmisor == aux.dniEmisor){
+           cont++;
+        }
+        if(env[pos].dniReceptor == aux.dniReceptor){
+           cont++;
+        }
+        if(strcasecmp(env[pos].domReceptor,aux.domReceptor)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].fechaEnvio,aux.fechaEnvio)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].fechaRecepcion,aux.fechaRecepcion)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].nomEmisor,aux.nomEmisor)==0){
+           cont++;
+        }
+        if(strcasecmp(env[pos].nomReceptor,aux.nomReceptor)==0){
+           cont++;
+        }
+        if(cont==8){
+            while(pos<*cant-1){
+                env[pos]=env[pos+1];
+                pos++;
+                *costo= *costo+1;
+            }
+            *cant = *cant - 1;
+             return exito=0;    //se elimino
+        }else{
+             return exito=1;    //no se  elimino
+        }
+    }
+     return exito=2;           //Envio no encontrado
+}
+int baja_ABB(struct Arbol *arbol,Envio aux,float *costo){
+    struct Nodo *elem;
+    int exito,cont=0;
+    float x;
+    if((*arbol).raiz==NULL){
+        return 3;     //Estructura vacia
+    }
+
+    exito=localizar_ABB(arbol,aux.codigoEnvio,&exito,&*costo);
+    *costo=0;
+    if(exito==0){
+        if(strcasecmp((*arbol).pos->env.codigoEnvio,aux.codigoEnvio)==0){
+            cont++;
+        }
+        if((*arbol).pos->env.dniEmisor == aux.dniEmisor){
+            cont++;
+        }
+        if((*arbol).pos->env.dniReceptor == aux.dniReceptor){
+            cont++;
+        }
+        if(strcasecmp((*arbol).pos->env.domReceptor,aux.domReceptor)==0){
+            cont++;
+        }
+        if(strcasecmp((*arbol).pos->env.fechaEnvio,aux.fechaEnvio)==0){
+            cont++;
+        }
+        if(strcasecmp((*arbol).pos->env.fechaRecepcion,aux.fechaRecepcion)==0){
+            cont++;
+        }
+        if(strcasecmp((*arbol).pos->env.nomEmisor,aux.nomEmisor)==0){
+            cont++;
+        }
+        if(strcasecmp((*arbol).pos->env.nomReceptor,aux.nomReceptor)==0){
+            cont++;
+        }
+        if(cont!=8){
+            return 1;     //Envio no eliminado
+        }
+        if((*arbol).pos->hijoDer==NULL && (*arbol).pos->hijoIzq==NULL){
+            if((*arbol).pos==(*arbol).raiz){
+                (*arbol).raiz=NULL;
+                *costo = *costo + 0.5;
+                free((*arbol).pos);
+            }
+            else{
+                if((*arbol).padre->hijoDer==(*arbol).pos){
+                    free((*arbol).pos);
+                    (*arbol).padre->hijoDer=NULL;
+                    *costo = *costo + 0.5;
+                }else{
+                    free((*arbol).pos);
+                    (*arbol).padre->hijoIzq=NULL;
+                    *costo =  *costo + 0.5;
+                }
+            }
+        }else if((*arbol).pos->hijoDer==NULL || (*arbol).pos->hijoIzq==NULL){
+            if((*arbol).pos==(*arbol).raiz){
+                if((*arbol).pos->hijoIzq!=NULL){
+                    (*arbol).raiz=(*arbol).raiz->hijoIzq;
+                    *costo = *costo + 0.5;
+                    free((*arbol).pos);
+                }else{
+                    (*arbol).raiz=(*arbol).raiz->hijoDer;
+                    *costo = *costo + 0.5;
+                    free((*arbol).pos);
+                }
+            }else{
+                if((*arbol).pos->hijoDer!=NULL){
+                    if(strcasecmp((*arbol).padre->env.codigoEnvio,(*arbol).pos->env.codigoEnvio)<0){
+                        (*arbol).padre->hijoDer=(*arbol).pos->hijoDer;
+                        *costo = *costo + 0.5;
+                    }else{
+                        (*arbol).padre->hijoIzq=(*arbol).pos->hijoDer;
+                        *costo = *costo + 0.5;
+                    }
+                    free((*arbol).pos);
+                }else{
+                    if(strcasecmp((*arbol).padre->env.codigoEnvio,(*arbol).pos->env.codigoEnvio)<0){
+                        (*arbol).padre->hijoDer=(*arbol).pos->hijoIzq;
+                        *costo = *costo + 0.5;
+                    }else{
+                        (*arbol).padre->hijoIzq=(*arbol).pos->hijoIzq;
+                        *costo = * costo + 0.5;
+                    }
+                    free((*arbol).pos);
+                }
+            }
+        }else{
+            elem=(*arbol).pos->hijoDer;
+            (*arbol).padre=(*arbol).pos;
+            while((*elem).hijoIzq!=NULL){
+                (*arbol).padre=elem;
+                elem=(*elem).hijoIzq;
+            }
+            (*arbol).pos->env=(*elem).env;
+            *costo = *costo + 1;
+            if((*arbol).padre->hijoDer==elem){
+                (*arbol).padre->hijoDer=(*elem).hijoDer;
+            }else{
+                (*arbol).padre->hijoIzq=(*elem).hijoDer;
+            }
+            *costo = *costo + 0.5;
+            free(elem);
+        }
+        return 0;       //Envio eliminado
+    }else{
+        return 2;     //Envio no encontrado
+    }
+}
+
+void mostrarEstructura_LSO(Envio env[],int *cant){
+    int i,aux=0;
+    if (*cant == 0){
+        printf("No hay nada en la estructura");
+    }else{
+    for(i=0;i<*cant;i++){
+        if((aux%3)==0){
+            getchar();
+        }
+        printf("\nDatos del envio %s:\n", env[i].codigoEnvio);
+        printf(" -DNI del receptor: %ld\n", env[i].dniReceptor);
+        printf(" -Nombre completo del receptor: %s\n", env[i].nomReceptor);
+        printf(" -Domicilio del receptor: %s\n", env[i].domReceptor);
+        printf(" -DNI del emisor: %ld\n", env[i].dniEmisor);
+        printf(" -Nombre completo del emisor: %s\n", env[i].nomEmisor);
+        printf(" -Fecha de envio: %s\n", env[i].fechaEnvio);
+        printf(" -Fecha de recepcion: %s\n", env[i].fechaRecepcion);
+        aux++;
+    }
+}}
+void mostrarEstructura_ABB(struct Arbol arbol){
+   int aux=0;
+   struct Nodo *pos;
+   if(arbol.raiz==NULL){
+       printf("Estrucutra vacia\n");
+   }else{
+       printf("\nDatos del envio %s:\n", arbol.raiz->env.codigoEnvio);
+       printf(" -DNI del receptor: %ld\n", arbol.raiz->env.dniReceptor);
+       printf(" -Nombre completo del receptor: %s\n", arbol.raiz->env.nomReceptor);
+       printf(" -Domicilio del receptor: %s\n", arbol.raiz->env.domReceptor);
+       printf(" -DNI del emisor: %ld\n", arbol.raiz->env.dniEmisor);
+       printf(" -Nombre completo del emisor: %s\n", arbol.raiz->env.nomEmisor);
+       printf(" -Fecha de envio: %s\n", arbol.raiz->env.fechaEnvio);
+       printf(" -Fecha de recepcion: %s\n", arbol.raiz->env.fechaRecepcion);
+       if(arbol.raiz->hijoIzq != NULL){
+            printf(" -Codigo de envio del hijo izquierdo: %s\n", arbol.raiz->hijoIzq->env.codigoEnvio);
+       }
+       if(arbol.raiz->hijoDer){
+            printf(" -Codigo de envio del hijo derecho: %s\n", arbol.raiz->hijoDer->env.codigoEnvio);
+       }
+       if(arbol.raiz->hijoIzq!=NULL){
+           pos=arbol.raiz;
+           arbol.raiz=arbol.raiz->hijoIzq;
+           mostrarEstructura_ABB(arbol);
+           arbol.raiz=pos;
+       }
+       if(arbol.raiz->hijoDer!=NULL){
+           arbol.raiz=arbol.raiz->hijoDer;
+           mostrarEstructura_ABB(arbol);
+       }
+    }
+}
+
+void cargarDesdeArchivo(Envio envLSO[],Envio envLSOBB[],struct Arbol *arbol,int *cantLSO,int *cantLSOBB,Costos *costo){
+    Envio elem;
+    struct Nodo *padre;
+    int x,y,z,pos,exito,costoEvo=0;
+    int operacion=0;
+    int costoauxiLSO[4]={0,0,0,0},costoauxiLSOBB[4]={0,0,0,0};
+    float costoauxiABB[4]={0,0,0,0};
+    int maxLSO[4]={0,0,0,0},maxLSOBB[4]={0,0,0,0};
+    float maxABB[4]={0,0,0,0};
+    int cant_Altas[3]={0,0,0},cant_Bajas[3]={0,0,0},cant_EvocarE[3]={0,0,0},cant_EvocarF[3]={0,0,0};
+    FILE *archivo = fopen("Operaciones-Envios.txt", "r");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.\n");
+    }else{
+        while(!(feof(archivo))){
+            fscanf(archivo," %d", &operacion);
+            if(operacion==1 || operacion==2){
+                fscanf(archivo," %s", &elem.codigoEnvio);
+                fscanf(archivo," %ld", &elem.dniReceptor);
+                fscanf(archivo," %[^\n]s", &elem.nomReceptor);
+                fscanf(archivo," %[^\n]s", &elem.domReceptor);
+                fscanf(archivo," %ld", &elem.dniEmisor);
+                fscanf(archivo," %[^\n]s", &elem.nomEmisor);
+                fscanf(archivo," %[^\n]s", &elem.fechaEnvio);
+                fscanf(archivo," %[^\n]s", &elem.fechaRecepcion);
+            }else{
+                fscanf(archivo," %s", &elem.codigoEnvio);
+            }
+            switch(operacion){
+                case 1: {
+
+                    printf("\n---alta---\n");
+                    x=alta_LSO(envLSO,elem,&*cantLSO,&costo->costoLSO[0]);
+                    cant_Altas[0]++;
+                    costoauxiLSO[0] = costoauxiLSO[0] + costo->costoLSO[0];
+                    if(maxLSO[0] < costo->costoLSO[0]){
+                        maxLSO[0]=costo->costoLSO[0];
+                    }
+
+                    y=alta_LSOBB(envLSOBB,elem,&*cantLSOBB,&costo->costoLSOBB[0]);
+                    cant_Altas[1]++;
+                    costoauxiLSOBB[0] = costoauxiLSOBB[0] + costo->costoLSOBB[0];;
+                    if(maxLSOBB[0]<costo->costoLSOBB[0]){
+                        maxLSOBB[0]=costo->costoLSOBB[0];
+                    }
+
+                    z=alta_ABB(arbol,elem,&*padre,&costo->costoABB[0]);
+                    cant_Altas[2]++;
+                    costoauxiABB[0] = costoauxiABB[0] + costo->costoABB[0];
+                    if(maxABB[0]<costo->costoABB[0]){
+                        maxABB[0]=costo->costoABB[0];
+                    }
+
+                    switch(x){
+                    case 0: printf(" LSO: Envio cargado\n");break;
+                    case 1: printf(" LSO: Envio ya existente\n");break;
+                    case 2: printf(" LSO: No hay espacio\n");break;
+                    }
+                    switch(y){
+                    case 0: printf(" LSOBB: Envio cargado\n");break;
+                    case 1: printf(" LSOBB: Envio ya existente\n");break;
+                    case 2: printf(" LSOBB: No hay espacio\n");break;
+                    }
+                    switch(z){
+                    case 0: printf(" ABB: Envio cargado\n");break;
+                    case 1: printf(" ABB: Envio ya existente\n");break;
+                    }
+                }break;
+                case 2:{
+                    printf("\n---baja---\n");
+                    x=baja_LSO(envLSO,elem,&*cantLSO,&costo->costoLSO[1]);
+                    cant_Bajas[0]=cant_Bajas[0] + 1;
+                    costoauxiLSO[1] = costoauxiLSO[1] + costo->costoLSO[1];
+                    if(maxLSO[1]<costo->costoLSO[1]){
+                        maxLSO[1]=costo->costoLSO[1];
+                    }
+                    y=baja_LSOBB(envLSOBB,elem,&*cantLSOBB,&costo->costoLSOBB[1]);
+                    cant_Bajas[1]++;
+                    costoauxiLSOBB[1] = costoauxiLSOBB[1] + costo->costoLSOBB[1];
+                    if(maxLSOBB[1]<costo->costoLSOBB[1]){
+                        maxLSOBB[1]=costo->costoLSOBB[1];
+                    }
+                    z=baja_ABB(arbol,elem,&costo->costoABB[1]);
+                    cant_Bajas[2]++;
+                    costoauxiABB[1] = costoauxiABB[1] + costo->costoABB[1];
+                    if(maxABB[1]<costo->costoABB[1]){
+                        maxABB[1]=costo->costoABB[1];
+                    }
+                    switch(x){
+                    case 1: printf(" LSO: Envio no eliminado\n");break;
+                    case 0: printf(" LSO: Envio eliminado correctamente\n");break;
+                    case 2: printf(" LSO: Envio no encontrado\n");break;
+                    }
+                    switch(y){
+                    case 1: printf(" LSOBB: Envio no eliminado\n");break;
+                    case 0: printf(" LSOBB: Envio eliminado correctamente\n");break;
+                    case 2: printf(" LSOBB: Envio no encontrado\n");break;
+                    }
+                    switch(z){
+                    case 0: printf(" ABB: Envio eliminado\n");break;
+                    case 1: printf(" ABB: Envio no eliminado\n");break;
+                    case 2: printf(" ABB: Envio no encontrado\n");break;
+                    case 3: printf(" ABB: Estructura vacia\n");break;
+                    }
+                }break;
+                case 3:{
+                    printf("\n---evocar---\n");
+                    x=evocar_LSO(envLSO,&elem,*cantLSO,&costo->costoLSO[2]);
+
+                    y=evocar_LSOBB(envLSOBB,&elem,*cantLSOBB,&costo->costoLSOBB[2]);
+
+                    z=evocar_ABB(*arbol,&elem,&costo->costoABB[2]);
+
+
+                    if(x==0){
+                        costoauxiLSO[2]=costoauxiLSO[2]+costo->costoLSO[2];
+                        cant_EvocarE[0]=cant_EvocarE[0] + 1;
+                        if(maxLSO[2]< costo->costoLSO[2]){
+                            maxLSO[2]= costo->costoLSO[2];
+                        }
+                    }else{
+                        costoauxiLSO[3]=costoauxiLSO[3]+costo->costoLSO[2];
+                        cant_EvocarF[0]=cant_EvocarF[0] + 1;
+                        if(maxLSO[3]< costo->costoLSO[2]){
+                            maxLSO[3]= costo->costoLSO[2];
+                        }
+                    }
+                    if(y==0){
+                        costoauxiLSOBB[2] = costoauxiLSOBB[2] + costo->costoLSOBB[2];
+                        cant_EvocarE[1]=cant_EvocarE[1] + 1;
+                        if(maxLSOBB[2] < costo->costoLSOBB[2]){
+                            maxLSOBB[2] = costo->costoLSOBB[2];
+                        }
+                    }else{
+                        costoauxiLSOBB[3]=costoauxiLSOBB[3]+costo->costoLSOBB[2];
+                        cant_EvocarF[1]=cant_EvocarF[1] + 1;
+                        if(maxLSOBB[3]<costo->costoLSOBB[2]){
+                            maxLSOBB[3]=costo->costoLSOBB[2];
+                        }
+                    }
+                    if(z==0){
+                        costoauxiABB[2]=costoauxiABB[2]+ costo->costoABB[2];
+                        cant_EvocarE[2]=cant_EvocarE[2] + 1;
+                        if(maxABB[2]<costo->costoABB[2]){
+                            maxABB[2]=costo->costoABB[2];
+                        }
+                    }else{
+                        costoauxiABB[3]=costoauxiABB[3]+costo->costoABB[2];
+                        cant_EvocarF[2]=cant_EvocarF[2] + 1;
+                        if(maxABB[3]<costo->costoABB[2]){
+                            maxABB[3]=costo->costoABB[2];
+                        }
+                    }
+
+                    switch(x){
+                    case 0: printf(" LSO: Envio encontrado\n");break;
+                    case 1: printf(" LSO: Envio no encontrado\n");break;
+                    case 2: printf(" LSO: Lista vacia\n");break;
+                    }
+                    switch(y){
+                    case 0: printf(" LSOBB: Envio encontrado\n");break;
+                    case 1: printf(" LSOBB: Envio no encontrado\n");break;
+                    case 2: printf(" LSOBB: Lista vacia\n");break;
+                    }
+                    switch(z){
+                    case 0: printf(" ABB: Envio encontrado\n");break;
+                    case 1: printf(" ABB: Envio no encontrado\n");break;
+                    case 2: printf(" ABB: Lista vacia\n");break;
+                    }
+                }break;
+            }
+        }
+    }
+    fclose(archivo);
+    //----------------------ALTAS------------------
+    costo->costoLSO[0]= costoauxiLSO[0];
+    costo->costoLSOBB[0]=costoauxiLSOBB[0];
+    costo->costoABB[0]= costoauxiABB[0];
+    //----------------------BAJAS ------------------
+    costo->costoLSO[1]= costoauxiLSO[1];
+    costo->costoLSOBB[1]=costoauxiLSOBB[1];
+    costo->costoABB[1]= costoauxiABB[1];
+   //----------------------CANTIDAD DE OPERACIONES lSO------------------
+   costo->cant_Altas[0]=cant_Altas[0];
+   costo->cant_Bajas[0]=cant_Bajas[0];
+   costo->cant_EvocarE[0]=cant_EvocarE[0];
+   costo->cant_EvocarF[0]=cant_EvocarF[0];
+   //---------------------- MEDIAS LSO------------------
+    costo->media_de_costosLSO[0]=((float)costoauxiLSO[0])/(cant_Altas[0]);
+    costo->media_de_costosLSO[1]=((float)costoauxiLSO[1])/(cant_Bajas[0]);
+    costo->media_de_costosLSO[2]=((float)costoauxiLSO[2])/(cant_EvocarE[0]);
+    costo->media_de_costosLSO[3]=((float)costoauxiLSO[3])/(cant_EvocarF[0]);
+    //---------------------- MAXIMOS LSO------------------
+    costo->maxLSO[0]=maxLSO[0];
+    costo->maxLSO[1]=maxLSO[1];
+    costo->maxLSO[2]=maxLSO[2];
+    costo->maxLSO[3]=maxLSO[3];
+    //----------------------EVOCACIONES LSO------------------
+    costo->costoLSO[2]=costoauxiLSO[2];
+    costo->costoLSO[3]=costoauxiLSO[3];
+
+    //---------------------- MEDIAS LSOBB------------------
+    costo->media_de_costosLSOBB[0]=((float)costoauxiLSOBB[0])/(cant_Altas[1]);
+    costo->media_de_costosLSOBB[1]=((float)costoauxiLSOBB[1])/(cant_Bajas[1]);
+    costo->media_de_costosLSOBB[2]=((float)costoauxiLSOBB[2])/(cant_EvocarE[1]);
+    costo->media_de_costosLSOBB[3]=((float)costoauxiLSOBB[3])/(cant_EvocarF[1]);
+    //----------------------CANTIDAD DE OPERACIONES lSOBB------------------
+   costo->cant_Altas[1]=cant_Altas[1];
+   costo->cant_Bajas[1]=cant_Bajas[1];
+   costo->cant_EvocarE[1]=cant_EvocarE[1];
+   costo->cant_EvocarF[1]=cant_EvocarF[1];
+    //----------------------EVOCAR LSOBB------------------
+    costo->costoLSOBB[2]=costoauxiLSOBB[2];
+    costo->costoLSOBB[3]=costoauxiLSOBB[3];
+
+    //---------------------- MAXIMOS LSOBB------------------
+    costo->maxLSOBB[0]=maxLSOBB[0];
+    costo->maxLSOBB[1]=maxLSOBB[1];
+    costo->maxLSOBB[2]=maxLSOBB[2];
+    costo->maxLSOBB[3]=maxLSOBB[3];
+
+    //---------------------- MAXIMOS AABB------------------
+    costo->maxABB[0]=maxABB[0];
+    costo->maxABB[1]=maxABB[1];
+    costo->maxABB[2]=maxABB[2];
+    costo->maxABB[3]=maxABB[3];
+    //----------------------EVOCAR ABB------------------
+    costo->costoABB[2]=costoauxiABB[2];
+    costo->costoABB[3]=costoauxiABB[3];
+    //---------------------- MEDIAS ABB------------------
+    costo->media_de_costosABB[0]=((float)costoauxiABB[0])/(cant_Altas[2]);
+    costo->media_de_costosABB[1]=((float)costoauxiABB[1])/(cant_Bajas[2]);
+    costo->media_de_costosABB[2]=((float)costoauxiABB[2])/(cant_EvocarE[2]);
+    costo->media_de_costosABB[3]=((float)costoauxiABB[3])/(cant_EvocarF[2]);
+     //----------------------CANTIDAD DE OPERACIONES lSOBB------------------
+   costo->cant_Altas[2]=cant_Altas[2];
+   costo->cant_Bajas[2]=cant_Bajas[2];
+   costo->cant_EvocarE[2]=cant_EvocarE[2];
+   costo->cant_EvocarF[2]=cant_EvocarF[2];
+
+}
